@@ -5,18 +5,11 @@
  * @format
  */
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import MapScreen from './src/Mapscreen'; // Adjust the import path as necessary
 function App() {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  return (
-    <View style={styles.container}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <NewAppScreen templateFileName="App.tsx" />
-    </View>
-  );
+  return <MapScreen />;
 }
 
 const styles = StyleSheet.create({
