@@ -6,16 +6,14 @@
  */
 
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import MapScreen from './src/Mapscreen'; // Adjust the import path as necessary
+import { NavigationContainer } from '@react-navigation/native';
+import TabNavigation from './src/navigations/Tab';
 function App() {
-  return <MapScreen />;
+  return (
+    <NavigationContainer>
+      <TabNavigation />
+    </NavigationContainer>
+  );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
 
 export default App;

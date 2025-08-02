@@ -1,14 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  PermissionsAndroid,
-  Platform,
-  Text,
-} from 'react-native';
-import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
+import { View, StyleSheet, PermissionsAndroid, Platform } from 'react-native';
+import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
 import styled from 'styled-components/native';
+import { Region } from '../types/map';
 
 const styles = StyleSheet.create({
   container: {
@@ -19,19 +14,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-type LatLng = {
-  latitude: number;
-  longitude: number;
-};
 
-type Point = {
-  x: number;
-  y: number;
-};
-
-type MapEvent<T> = {
-  nativeEvent: T;
-};
 const CoodinateBox = styled.View`
   top: 10px;
   left: 10px;
@@ -56,26 +39,23 @@ async function requestLocationPermission() {
   return true;
 }
 
-type Region = {
-  latitude: number;
-  longitude: number;
-  latitudeDelta: number;
-  longitudeDelta: number;
-};
+interface MapProps {
+  children?: React.ReactNode;
+}
 
-const Map = () => {
+const Map = ({ children }: MapProps) => {
   // Region 설정 하기.
-
   const [region, setRegion] = useState<Region | null>(null);
-  // 대여소
-  const [stations, setStations] = useState<LatLng[]>([]);
+  // // 대여소
+  // const [stations, setStations] = useState<LatLng[]>([]);
 
-  const handleMapPress = (
-    event: MapEvent<{ coordinate: LatLng; position: Point }>,
-  ) => {
-    const { coordinate, position } = event.nativeEvent;
-    setStations([coordinate]);
-  };
+  // const _handleMapPress = (
+  //   event: MapEvent<{ coordinate: LatLng; position: Point }>,
+  // ) => {
+  //   const { coordinate, position } = event.nativeEvent;
+  //   setStations([coordinate]);
+  // };
+
   async function getLocation() {
     const hasPermission = await requestLocationPermission();
     if (!hasPermission) {
@@ -116,16 +96,13 @@ const Map = () => {
         provider={PROVIDER_GOOGLE}
         style={styles.map}
         initialRegion={region}
-        onPress={handleMapPress}
+        // onPress={_handleMapPress}
       >
-        <Marker
-          coordinate={{ latitude: 37.56825, longitude: 126.8453222222 }}
-          title={'Googleplex'}
-          description={'Google Headquarters'}
-        />
+        {children}
       </MapView>
+
       <CoodinateBox>
-        <TextBox>위도: {stations.latitude}</TextBox>
+        <TextBox>위도: {region?.latitude}</TextBox>
         <TextBox>경도: {region?.longitude}</TextBox>
       </CoodinateBox>
     </View>
