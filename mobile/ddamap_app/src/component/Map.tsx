@@ -1,27 +1,28 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { View, StyleSheet, PermissionsAndroid, Platform } from 'react-native';
 import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
 import styled from 'styled-components/native';
 import { Region } from '../types/map';
+import { useFocusEffect } from '@react-navigation/native';
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
   map: {
-    // ...StyleSheet.absoluteFillObject,
     flex: 1,
   },
 });
 
 const CoodinateBox = styled.View`
+  position: absolute;
   top: 10px;
   left: 10px;
   background-color: white;
   padding: 10px;
   border-radius: 5px;
-  elevation: 3; /* 안드로이드에서 그림자 효과 */
+  elevation: 3;
 `;
 
 const TextBox = styled.Text`
@@ -44,20 +45,12 @@ interface MapProps {
 }
 
 const Map = ({ children }: MapProps) => {
-  // Region 설정 하기.
-  const [region, setRegion] = useState<Region | null>(null);
-  // // 대여소
-  // const [stations, setStations] = useState<LatLng[]>([]);
+  const [region, setRegion] = useState<Region>();
+  const mapRef = useRef<MapView>(null);
+  const [isMapReady, setIsMapReady] = useState(false); // 맵 준비 상태
 
-  // const _handleMapPress = (
-  //   event: MapEvent<{ coordinate: LatLng; position: Point }>,
-  // ) => {
-  //   const { coordinate, position } = event.nativeEvent;
-  //   setStations([coordinate]);
-  // };
-
-  async function getLocation() {
-    const hasPermission = await requestLocationPermission();
+  function getLocation() {
+    const hasPermission = requestLocationPermission();
     if (!hasPermission) {
       console.warn('위치 권한이 거부됨');
       return;
@@ -66,15 +59,14 @@ const Map = ({ children }: MapProps) => {
     Geolocation.getCurrentPosition(
       position => {
         const { latitude, longitude } = position.coords;
-        // 여기서 위치 정보를 사용하여 필요한 작업을 수행할 수 있습니다.
-
-        // 예: 지도 중심 설정, 위치 표시 등
-        setRegion({
+        const newRegion = {
           latitude,
           longitude,
           latitudeDelta: 0.0922,
           longitudeDelta: 0.0421,
-        });
+        };
+        setRegion(newRegion);
+        console.log('현재 위치 갱신');
       },
       error => {
         console.error('❌ 위치 에러:', error);
@@ -86,24 +78,39 @@ const Map = ({ children }: MapProps) => {
       },
     );
   }
+
   useEffect(() => {
-    getLocation();
-  }, []);
+    // console.log('useEffect 실행');
+    setIsMapReady(true);
+    mapRef.current?.animateToRegion(region, 500);
+  }, [region]);
+  // 탭 포커스 시 지도를 TARGET_REGION으로 이동
+
+  useFocusEffect(
+    useCallback(() => {
+      console.log('=== 탭 포커스됨 ===');
+      getLocation();
+      setIsMapReady(false);
+    }, []),
+  );
 
   return (
     <View style={styles.container}>
-      <MapView
-        provider={PROVIDER_GOOGLE}
-        style={styles.map}
-        initialRegion={region}
-        // onPress={_handleMapPress}
-      >
-        {children}
-      </MapView>
-
+      {isMapReady && (
+        <MapView
+          ref={mapRef}
+          provider={PROVIDER_GOOGLE}
+          style={styles.map}
+          initialRegion={region}
+          showsUserLocation
+        >
+          {children}
+        </MapView>
+      )}
       <CoodinateBox>
         <TextBox>위도: {region?.latitude}</TextBox>
         <TextBox>경도: {region?.longitude}</TextBox>
+        <TextBox>맵 상태: {isMapReady ? '준비됨' : '로딩중'}</TextBox>
       </CoodinateBox>
     </View>
   );
